@@ -6,3 +6,8 @@ textbox. And yes it works as you would expect it to do, and does everything you 
 of a trouble to see what you write. And it also works with Chat in VR GUI. I tested mod myself a lot of times before it was somewhat polished, but it can still contain bugs. 
 
 Feel free to use and enjoy your VR experience
+
+Installation instruction: just unzip it in "mods" folder in your PAYDAY2 directory. Can be found through steam "installation folder" option. If you don't see "mods" folder - reminder to install latest superBLT here: https://superblt.znix.xyz/ 
+
+Requires: superBLT
+Suported mods: vrplus, Chat in VR GUI
