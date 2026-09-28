@@ -1,4 +1,4 @@
-I created this mod fully with chatGPT5. And I don't really care about AI problems. Take it or leave it I say, It works fine in my HTC Vive headset and with my valve controllers. Idk if it would cause any problems on other 
+I created this mod with support of GPT5. It works fine in my HTC Vive headset and with my valve controllers. Idk if it would cause any problems on other 
 setups. It you have bugs - feel free to get in touch through git.
 
 What it lets you to do? Basically use the damn PayDay 2 chat in VR! New VR keyboard doesn't use buffered input, so, I basically invented the bicycle back. Also added decorative textbox, that works by using useless vanilla 
