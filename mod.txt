@@ -1,8 +1,8 @@
 {
-    "name": "PD2 VR Normal Chat",
-    "description": "Buffers modern SteamVR keyboard input and feeds the complete string back to PAYDAY 2. Works with VRPlus mod with it's wrist tablet, adding useful full working textbox on the up side of textbox. Works with Chat in GUI mod also. Yes it was fully built using GPT5, but who cares? Take it or leave it.",
-    "author": "SampleFox",
-    "version": "v1",
+    "name": "PD2 VR Chat Buffer",
+    "description": "Buffers modern SteamVR keyboard input and feeds the complete string back to PAYDAY 2.",
+    "author": "OpenAI / test build",
+    "version": "0.5-source-test",
     "blt_version": 2,
     "hooks": [
         {
@@ -17,6 +17,10 @@
             "hook_id": "lib/managers/hud/hudchat",
             "script_path": "hud_tick.lua"
         },
+	{
+	    "hook_id": "lib/managers/chatmanager",
+            "script_path": "chat_trace.lua"
+	},
 	{
             "hook_id": "lib/managers/hudmanagervr",
             "script_path": "tablet_preview.lua"

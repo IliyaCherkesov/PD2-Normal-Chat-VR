@@ -34,10 +34,13 @@ local function ensure_preview(self)
         y = 5,
         w = tablet_panel:w() - 12,
         h = 28,
-        layer = 100
+        layer = 2000,
+        alpha = 1
     })
 
-    panel:rect({
+    panel:set_alpha(1)
+
+    local background = panel:rect({
         name = "background",
         x = 0,
         y = 0,
@@ -45,6 +48,7 @@ local function ensure_preview(self)
         h = panel:h(),
         color = Color.black,
         alpha = 1,
+        blend_mode = "normal",
         layer = 0
     })
 
@@ -60,6 +64,7 @@ local function ensure_preview(self)
         color = Color.white,
         align = "left",
         vertical = "center",
+        blend_mode = "normal",
         layer = 1
     })
 
@@ -70,17 +75,8 @@ local function ensure_preview(self)
     self._pd2vr_last_preview = nil
     self._pd2vr_last_cursor = nil
 
-    dlog(
-        "tablet preview created"
-        .. " root="
-        .. tostring(tablet_panel:w())
-        .. "x"
-        .. tostring(tablet_panel:h())
-        .. " preview="
-        .. tostring(panel:w())
-        .. "x"
-        .. tostring(panel:h())
-    )
+    dlog("tablet preview created" .. " root=" .. tostring(tablet_panel:w()) .. "x" .. tostring(tablet_panel:h()) ..
+             " preview=" .. tostring(panel:w()) .. "x" .. tostring(panel:h()))
 
     return true
 end
