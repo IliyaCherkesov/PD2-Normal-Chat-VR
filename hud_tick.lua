@@ -29,23 +29,14 @@ function HUDChat:_on_focus()
     local output_panel = self._panel:child("output_panel")
 
     output_panel:stop()
-    output_panel:animate(
-        callback(self, self, "_animate_show_output"),
-        output_panel:alpha()
-    )
+    output_panel:animate(callback(self, self, "_animate_show_output"), output_panel:alpha())
 
     self._input_panel:stop()
-    self._input_panel:animate(
-        callback(self, self, "_animate_show_component")
-    )
+    self._input_panel:animate(callback(self, self, "_animate_show_component"))
 
     self._focus = true
 
-    self._input_panel
-        :child("focus_indicator")
-        :set_color(
-            Color(0.8, 1, 0.8):with_alpha(0.2)
-        )
+    self._input_panel:child("focus_indicator"):set_color(Color(0.8, 1, 0.8):with_alpha(0.2))
 
     self._ws:connect_keyboard(Input:keyboard())
 
@@ -80,16 +71,8 @@ function HUDChat:_on_focus()
         reset_input(self)
     end
 
-    local opened =
-        B
-        and B.open_direct_chat
-        and B.open_direct_chat(
-            "HUDChat:_on_focus",
-            native_submit,
-            "PAYDAY 2 Chat",
-            60,
-            ""
-        )
+    local opened = B and B.open_direct_chat and
+                       B.open_direct_chat("HUDChat:_on_focus", native_submit, "PAYDAY 2 Chat", 60, "")
 
     if not opened then
         dlog("Native keyboard unavailable; using vanilla fallback")
@@ -100,21 +83,13 @@ function HUDChat:_on_focus()
     -- Original HUDChat focus setup
     --------------------------------------------------------
 
-    self._input_panel:key_press(
-        callback(self, self, "key_press")
-    )
+    self._input_panel:key_press(callback(self, self, "key_press"))
 
-    self._input_panel:key_release(
-        callback(self, self, "key_release")
-    )
+    self._input_panel:key_release(callback(self, self, "key_release"))
 
     self._enter_text_set = false
 
-    self._input_panel
-        :child("input_bg")
-        :animate(
-            callback(self, self, "_animate_input_bg")
-        )
+    self._input_panel:child("input_bg"):animate(callback(self, self, "_animate_input_bg"))
 
     self:set_scroll_indicators(true)
 
