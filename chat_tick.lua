@@ -2,20 +2,30 @@ if not _G.IS_VR or not ChatGui then
     return
 end
 
-local function dlog(s)
+local TAG = "[PD2 VR Normal Chat] "
+
+local function dlog(message)
     if log then
-        log("[PD2 VR Chat Buffer v1.5] " .. tostring(s))
+        log(TAG .. tostring(message))
     end
 end
 
-dlog("chat_tick loaded; replacing ChatGui:_on_focus")
+local function reset_input(self)
+    local input_text = self._input_panel:child("input_text")
+
+    input_text:set_text("")
+    input_text:set_selection(0, 0)
+
+    self._pd2vr_last_preview = ""
+    self._pd2vr_last_cursor = 0
+
+    self:update_caret()
+end
+
+dlog("ChatGui integration loaded")
 
 function ChatGui:_on_focus()
-    if not self._enabled then
-        return
-    end
-
-    if self._focus then
+    if not self._enabled or self._focus then
         return
     end
 
@@ -36,73 +46,51 @@ function ChatGui:_on_focus()
 
     self._focus = true
 
-    self._input_panel:child("focus_indicator"):set_color(
-        Color(0, 0, 0):with_alpha(0.2)
-    )
+    self._input_panel
+        :child("focus_indicator")
+        :set_color(
+            Color(0, 0, 0):with_alpha(0.2)
+        )
 
     self._ws:connect_keyboard(Input:keyboard())
+
+    --------------------------------------------------------
+    -- Native SteamVR keyboard
+    --------------------------------------------------------
 
     local B = _G.PD2VRChatBuffer
 
     if B then
-    B.chat_gui_instance = self
+        -- bridge.lua uses this instance to mirror the native
+        -- keyboard buffer into ChatGui while typing.
+        B.chat_gui_instance = self
 
-    self._pd2vr_last_preview = nil
-    self._pd2vr_last_cursor = nil
-end
-
-    ------------------------------------------------------------
-    -- Direct ChatGui submit path
-    ------------------------------------------------------------
-
-    local function native_submit(submitted, submitted_text)
-    dlog(
-    "ChatGui native submit"
-    .. " submitted=" .. tostring(submitted)
-    .. " text=[" .. tostring(submitted_text) .. "]"
-)
-
-    local input_text =
-        self._input_panel:child("input_text")
-
-   local function reset_input()
-    input_text:set_text("")
-    input_text:set_selection(0, 0)
-
-    self._pd2vr_last_preview = ""
-    self._pd2vr_last_cursor = 0
-
-    self:update_caret()
-end
-
-    -- Очень важно:
-    -- PAYDAY всё ещё может успеть положить последний символ
-    -- SteamVR ввода в своё поле. Именно это дало twrist.
-    reset_input()
-
-    if not submitted then
-        return
+        self._pd2vr_last_preview = nil
+        self._pd2vr_last_cursor = nil
     end
 
-    submitted_text =
-        submitted_text or ""
-    
-    if submitted_text:match("^%s*$") then
-    reset_input()
-    return
-end
+    local function native_submit(submitted, submitted_text)
+        -- Remove any character that may have leaked through the
+        -- legacy PAYDAY / SteamVR keyboard path.
+        reset_input(self)
 
-    self:enter_text(
-        nil,
-        submitted_text
-    )
+        if not submitted then
+            return
+        end
 
-    self:enter_key_callback()
+        submitted_text = submitted_text or ""
 
-    -- enter_text передвинул selection/caret в конец строки,
-    -- поэтому после отправки возвращаем пустое поле в нулевую позицию.
-    reset_input()
-end
+        if submitted_text:match("^%s*$") then
+            reset_input(self)
+            return
+        end
+
+        self:enter_text(nil, submitted_text)
+        self:enter_key_callback()
+
+        -- Restore a clean field after PAYDAY moves the caret.
+        reset_input(self)
+    end
 
     local opened =
         B
@@ -115,26 +103,14 @@ end
             ""
         )
 
-    dlog(
-        "ChatGui:_on_focus native opened="
-        .. tostring(opened)
-    )
-
-    ------------------------------------------------------------
-    -- Vanilla fallback
-    ------------------------------------------------------------
-
     if not opened then
+        dlog("Native keyboard unavailable; using vanilla fallback")
         Input:keyboard():show()
-
-        dlog(
-            "ChatGui:_on_focus fell back to vanilla keyboard"
-        )
     end
 
-    ------------------------------------------------------------
+    --------------------------------------------------------
     -- Original ChatGui focus setup
-    ------------------------------------------------------------
+    --------------------------------------------------------
 
     self._input_panel:key_press(
         callback(self, self, "key_press")
@@ -146,9 +122,11 @@ end
 
     self._enter_text_set = false
 
-    self._input_panel:child("input_bg"):animate(
-        callback(self, self, "_animate_input_bg")
-    )
+    self._input_panel
+        :child("input_bg")
+        :animate(
+            callback(self, self, "_animate_input_bg")
+        )
 
     self:set_layer(tweak_data.gui.CRIMENET_CHAT_LAYER)
     self:update_caret()

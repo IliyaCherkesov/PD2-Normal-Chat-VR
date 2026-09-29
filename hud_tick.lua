@@ -2,13 +2,24 @@ if not _G.IS_VR or not HUDChat then
     return
 end
 
-local function dlog(s)
+local TAG = "[PD2 VR Normal Chat] "
+
+local function dlog(message)
     if log then
-        log("[PD2 VR Chat Buffer v1.5] " .. tostring(s))
+        log(TAG .. tostring(message))
     end
 end
 
-dlog("hud_tick loaded; replacing HUDChat:_on_focus")
+local function reset_input(self)
+    local input_text = self._input_panel:child("input_text")
+
+    input_text:set_text("")
+    input_text:set_selection(0, 0)
+
+    self:update_caret()
+end
+
+dlog("HUDChat integration loaded")
 
 function HUDChat:_on_focus()
     if self._focus then
@@ -18,14 +29,23 @@ function HUDChat:_on_focus()
     local output_panel = self._panel:child("output_panel")
 
     output_panel:stop()
-    output_panel:animate(callback(self, self, "_animate_show_output"), output_panel:alpha())
+    output_panel:animate(
+        callback(self, self, "_animate_show_output"),
+        output_panel:alpha()
+    )
 
     self._input_panel:stop()
-    self._input_panel:animate(callback(self, self, "_animate_show_component"))
+    self._input_panel:animate(
+        callback(self, self, "_animate_show_component")
+    )
 
     self._focus = true
 
-    self._input_panel:child("focus_indicator"):set_color(Color(0.8, 1, 0.8):with_alpha(0.2))
+    self._input_panel
+        :child("focus_indicator")
+        :set_color(
+            Color(0.8, 1, 0.8):with_alpha(0.2)
+        )
 
     self._ws:connect_keyboard(Input:keyboard())
 
@@ -35,33 +55,10 @@ function HUDChat:_on_focus()
 
     local B = _G.PD2VRChatBuffer
 
-    local input_panel = self._input_panel
-
-    dlog("HUDChat geometry" .. " panel=" .. tostring(self._panel:w()) .. "x" .. tostring(self._panel:h()) ..
-             " output x=" .. tostring(output_panel:x()) .. " y=" .. tostring(output_panel:y()) .. " w=" ..
-             tostring(output_panel:w()) .. " h=" .. tostring(output_panel:h()) .. " input x=" ..
-             tostring(input_panel:x()) .. " y=" .. tostring(input_panel:y()) .. " w=" .. tostring(input_panel:w()) ..
-             " h=" .. tostring(input_panel:h()))
-
-    local last_preview = ""
-
     local function native_submit(submitted, submitted_text)
-        dlog("HUDChat native submit" .. " submitted=" .. tostring(submitted) .. " text=[" .. tostring(submitted_text) ..
-                 "]")
-
-        local input_text = self._input_panel:child("input_text")
-
-        local function reset_input()
-            input_text:set_text("")
-            input_text:set_selection(0, 0)
-
-            self:update_caret()
-        end
-
-        -- Очень важно:
-        -- PAYDAY всё ещё может успеть положить последний символ
-        -- SteamVR ввода в своё поле. Именно это дало twrist.
-        reset_input()
+        -- PAYDAY may still insert a stale character through the
+        -- legacy SteamVR input path before the native result arrives.
+        reset_input(self)
 
         if not submitted then
             return
@@ -69,44 +66,61 @@ function HUDChat:_on_focus()
 
         submitted_text = submitted_text or ""
 
+        -- Do not send empty or whitespace-only messages.
         if submitted_text:match("^%s*$") then
-            reset_input()
+            reset_input(self)
             return
         end
 
         self:enter_text(nil, submitted_text)
-
         self:enter_key_callback()
 
-        -- enter_text передвинул selection/caret в конец строки,
-        -- поэтому после отправки возвращаем пустое поле в нулевую позицию.
-        reset_input()
+        -- enter_text() moves the selection to the end of the string,
+        -- so restore an empty input field and caret after submission.
+        reset_input(self)
     end
 
-    local opened = B and B.open_direct_chat and
-                       B.open_direct_chat("HUDChat:_on_focus", native_submit, "PAYDAY 2 Chat", 60, "")
-
-    dlog("HUDChat:_on_focus native opened=" .. tostring(opened))
+    local opened =
+        B
+        and B.open_direct_chat
+        and B.open_direct_chat(
+            "HUDChat:_on_focus",
+            native_submit,
+            "PAYDAY 2 Chat",
+            60,
+            ""
+        )
 
     if not opened then
+        dlog("Native keyboard unavailable; using vanilla fallback")
         Input:keyboard():show()
-
-        dlog("HUDChat:_on_focus fell back " .. "to vanilla keyboard")
     end
 
     --------------------------------------------------------
     -- Original HUDChat focus setup
     --------------------------------------------------------
 
-    self._input_panel:key_press(callback(self, self, "key_press"))
+    self._input_panel:key_press(
+        callback(self, self, "key_press")
+    )
 
-    self._input_panel:key_release(callback(self, self, "key_release"))
+    self._input_panel:key_release(
+        callback(self, self, "key_release")
+    )
 
     self._enter_text_set = false
 
-    self._input_panel:child("input_bg"):animate(callback(self, self, "_animate_input_bg"))
+    self._input_panel
+        :child("input_bg")
+        :animate(
+            callback(self, self, "_animate_input_bg")
+        )
 
     self:set_scroll_indicators(true)
+
+    -- HUDChat raises itself while focused. The tablet preview is
+    -- intentionally placed above this layer.
     self:set_layer(1100)
+
     self:update_caret()
 end
