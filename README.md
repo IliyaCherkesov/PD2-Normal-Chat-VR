@@ -12,3 +12,4 @@ Installation instruction: just unzip it in "mods" folder in your PAYDAY2 directo
 Requires: superBLT
 
 Suported mods: vrplus, Chat in VR GUI
+Nexus link: https://www.nexusmods.com/payday2/mods/888
